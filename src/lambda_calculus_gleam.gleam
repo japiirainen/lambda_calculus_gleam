@@ -1,9 +1,8 @@
 import gleam/io
 import gleam/string as s
 import gleam/list as l
-import gleam/result as r
 
-type Tok {
+pub type Tok {
   LParen
   RParen
   Lambda
@@ -11,7 +10,7 @@ type Tok {
   Var(name: String)
 }
 
-fn tokenize(src: String) -> List(Tok) {
+pub fn tokenize(src: String) -> List(Tok) {
   case s.pop_grapheme(src) {
     Error(_) -> []
     Ok(#(tok, rest)) ->
@@ -38,5 +37,4 @@ pub fn main() {
   |> io.debug
   tokenize(t2)
   |> io.debug
-  io.println("Hello from lambda_calculus_cleam!")
 }
