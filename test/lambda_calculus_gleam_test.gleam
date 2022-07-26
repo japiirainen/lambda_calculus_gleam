@@ -1,6 +1,8 @@
 import gleeunit
 import gleeunit/should
-import lambda_calculus_gleam.{Dot, LParen, Lambda, RParen, Var, tokenize}
+import lambda_calculus_gleam.{
+  Dot, LParen, Lambda, RParen, TApp, TLambda, TVar, Var, parse, tokenize,
+}
 
 pub fn main() {
   gleeunit.main()
@@ -35,4 +37,19 @@ pub fn tokenize_nested_lambda_whitespace_test() {
     Var("y"),
     RParen,
   ])
+}
+
+pub fn parse_simple_lambda_test() {
+  assert Ok(res) =
+    tokenize("\\x.x")
+    |> parse
+  should.equal(res, TLambda("x", TVar("x")))
+}
+
+pub fn parse_nested_lambda_test() {
+  assert Ok(res) =
+    tokenize("(\\x. x \\y. y)")
+    |> parse
+  let expected = TApp(TLambda("x", TVar("x")), TLambda("y", TVar("y")))
+  should.equal(res, expected)
 }
