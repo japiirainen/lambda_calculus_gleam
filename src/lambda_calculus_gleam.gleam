@@ -3,6 +3,8 @@ import gleam/string as s
 import gleam/string_builder as sb
 import gleam/list as l
 import gleam/result as r
+import gleam/erlang.{get_line}
+import gleam/otp/process
 
 pub type Tok {
   LParen
@@ -115,11 +117,28 @@ pub fn pp(t: Term) -> String {
   }
 }
 
+pub fn interpret(src: String) -> Result(String, String) {
+  tokenize(src)
+  |> parse
+  |> r.then(eval)
+  |> r.map(pp)
+}
+
 pub fn main() {
-  let t1 = "\\x.x"
-  let t2 = "(\\x.x \\y.y)"
-  tokenize(t1)
-  |> io.debug
-  tokenize(t2)
-  |> io.debug
+  let #(sender, receiver) = process.new_channel()
+  process.start(fn() {
+    assert Ok(line) = get_line("> ")
+    case interpret(line) {
+      Ok(t) -> {
+        io.println(t)
+        process.send(sender, t)
+      }
+      Error(e) -> {
+        io.println(s.append("Error: ", e))
+        process.send(sender, s.append("Error: ", e))
+      }
+    }
+  })
+  let _ = process.receive(receiver, 1000)
+  main()
 }
