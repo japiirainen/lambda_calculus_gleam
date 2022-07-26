@@ -31,18 +31,14 @@ pub fn tokenize(src: String) -> List(Tok) {
   }
 }
 
-pub type EnvItem {
-  EnvItem(n: String, t: Term)
-}
-
 pub type Term {
   TVar(n: String)
   TLambda(n: String, t: Term)
   TApp(t1: Term, t2: Term)
-  TClosure(n: String, t: Term, e: List(EnvItem))
+  TClosure(n: String, t: Term, e: List(#(String, Term)))
 }
 
-pub fn p_single(ts: List(Tok)) -> Result(#(Term, List(Tok)), String) {
+fn p_single(ts: List(Tok)) -> Result(#(Term, List(Tok)), String) {
   case ts {
     [Var(n), ..rest] -> Ok(#(TVar(n), rest))
     [Lambda, Var(n), Dot, ..b] ->
@@ -66,6 +62,31 @@ pub fn p_single(ts: List(Tok)) -> Result(#(Term, List(Tok)), String) {
 pub fn parse(ts: List(Tok)) -> Result(Term, String) {
   p_single(ts)
   |> r.map(fn(t) { t.0 })
+}
+
+fn eval_in_env(env: List(#(String, Term)), t: Term) -> Result(Term, String) {
+  case t {
+    TVar(n) ->
+      case l.find(env, fn(e) { e.0 == n }) {
+        Ok(t) -> Ok(t.1)
+        Error(_) -> Error("Variable not found.")
+      }
+    TLambda(n, body) -> Ok(TClosure(n, body, env))
+    TApp(fun, value) ->
+      case eval_in_env(env, fun) {
+        Ok(TClosure(arg, body, new_env)) ->
+          eval_in_env(new_env, value)
+          |> r.then(fn(t) {
+            eval_in_env(l.append(l.append([#(arg, t)], new_env), env), body)
+          })
+        _ -> Error("Expected a closure in function application.")
+      }
+    TClosure(arg, body, env) -> Ok(TClosure(arg, body, env))
+  }
+}
+
+pub fn eval(t: Term) -> Result(Term, String) {
+  eval_in_env([], t)
 }
 
 pub fn main() {
