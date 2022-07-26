@@ -1,5 +1,6 @@
 import gleam/io
 import gleam/string as s
+import gleam/string_builder as sb
 import gleam/list as l
 import gleam/result as r
 
@@ -87,6 +88,31 @@ fn eval_in_env(env: List(#(String, Term)), t: Term) -> Result(Term, String) {
 
 pub fn eval(t: Term) -> Result(Term, String) {
   eval_in_env([], t)
+}
+
+pub fn pp(t: Term) -> String {
+  case t {
+    TVar(n) -> n
+    TLambda(n, body) ->
+      sb.from_string("\\")
+      |> sb.append(n)
+      |> sb.append(".")
+      |> sb.append(pp(body))
+      |> sb.to_string
+    TApp(fun, x) ->
+      sb.from_string("(")
+      |> sb.append(pp(fun))
+      |> sb.append(" ")
+      |> sb.append(pp(x))
+      |> sb.append(")")
+      |> sb.to_string
+    TClosure(n, body, _env) ->
+      sb.from_string("\\")
+      |> sb.append(n)
+      |> sb.append(".")
+      |> sb.append(pp(body))
+      |> sb.to_string
+  }
 }
 
 pub fn main() {

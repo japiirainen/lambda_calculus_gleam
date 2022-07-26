@@ -2,7 +2,8 @@ import gleeunit
 import gleeunit/should
 import gleam/result as r
 import lambda_calculus_gleam.{
-  Dot, LParen, Lambda, RParen, TApp, TClosure, TLambda, TVar, Var, eval, parse, tokenize,
+  Dot, LParen, Lambda, RParen, TApp, TClosure, TLambda, TVar, Var, eval, parse, pp,
+  tokenize,
 }
 
 pub fn main() {
@@ -69,4 +70,22 @@ pub fn eval_nested_lambda_test() {
     |> parse
     |> r.then(eval)
   should.equal(res, TClosure("y", TVar("y"), []))
+}
+
+pub fn pp_simple_lambda_test() {
+  assert Ok(res) =
+    tokenize("\\x.x")
+    |> parse
+    |> r.then(eval)
+    |> r.map(pp)
+  should.equal(res, "\\x.x")
+}
+
+pub fn pp_nested_lambda_test() {
+  assert Ok(res) =
+    tokenize("(\\x. x \\y. y)")
+    |> parse
+    |> r.then(eval)
+    |> r.map(pp)
+  should.equal(res, "\\y.y")
 }
