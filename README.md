@@ -13,6 +13,17 @@ gleam test  # Run the tests
 gleam shell # Run an Erlang shell
 ```
 
+A sample repl session.
+
+```sh
+> \x. x
+\x.x
+> (\x. x) \y. y
+Error: Failed to parse.
+> (\x. x \y. y)
+y.y
+```
+
 ## Installation
 
 If available on Hex this package can be added to your Gleam project:
